@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualiser</title>
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+
+<body>
+    <div class="header">
+        <div class="title">
+            Graph Algorithms Visualiser
+        </div>
+    </div>
+
+    <div class="main-body">
+        <div class="menuBar">
+            <div class="menu">
+                <select name="algorithms" id="algorithms" class="dropdown algorithms">
+                    <option value="bfs">BFS</option>
+                    <option value="dfs">DFS</option>
+                    <option value="dijkstras">Dijkstra's</option>
+                    <option value="topo">Topo Sort (BFS)</option>
+                    <option value="prims">Prim's MST</option>
+                    <option value="kruskals">Kruskal's</option>
+                </select>
+
+                <select name="dir_undir" id="dir_undir" class="dropdown dirUndir">
+                    <option value="directed">Directed Graph</option>
+                    <option value="undirected">Undirected Graph</option>
+                </select>
+
+                <select name="cycles" id="cycles" class="dropdown cycles">
+                    <option value="cyclic">Cyclic Graph</option>
+                    <option value="acyclic">Acyclic Graph</option>
+                </select>
+
+                <select name="size" id="size" class="dropdown size">
+                    <option value="small">Small Graph</option>
+                    <option value="large">Large Graph</option>
+                </select>
+
+                <input type="number" placeholder="Starting vertex" class="dropdown">
+
+                <select name="speed" id="speed" class="dropdown">
+                    <option value="slow">Slow</option>
+                    <option value="medium">Medium</option>
+                    <option value="fast">Fast</option>
+                </select>
+
+                <button class="visualise" id="newGraphBtn">New Graph</button>
+
+                <button class="visualise" id="visualiseBtn">Visualise</button>
+            </div>
+        </div>
+
+        <div class="mainContent">
+            <div class="graph" id="graph">
+
+            </div>
+
+            <div class="adjList" id="adjList">
+                <div class="adjname">
+                    Adjacency List
+                </div>
+                <div class="list">
+                    
+                </div>
+            </div>
+
+            <div class="implement_space">
+                <div class="queue">
+                    <div class="qname">
+                        Queue
+                    </div>
+                    <div class="Queue">
+
+                    </div>
+                </div>
+
+                <div class="visAndRes">
+                    <div class="vis">
+                        <div class="visname">
+                            Visited Array :-
+                        </div>
+                        <div class="visarr">
+                            <div class="vis0 ind">0</div>
+                            <div class="vis1 ind">0</div>
+                            <div class="vis2 ind">0</div>
+                            <div class="vis3 ind">0</div>
+                            <div class="vis4 ind">0</div>
+                            <div class="vis5 ind">0</div>
+                            <div class="vis6 ind">0</div>
+                            <div class="vis7 ind">0</div>
+                            <div class="vis8 ind">0</div>
+                            <div class="vis9 ind">0</div>
+                        </div>
+                    </div>
+
+                    <hr class="ruling">
+
+                    <div class="res">
+                        <div class="resname">
+                            Result :-
+                        </div>
+                        <div class="resarr">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="owner">
+            Crafted By :- Priyanshu Patel
+            <a target="_blank" class="ghlink" href="https://github.com/BugSlayer03"><img class="ghlogo"
+                    src="images/github.png" alt="GitHub"></a>
+
+            <a target="_blank" class="ldlink" href="https://www.linkedin.com/in/patelpriyanshu03/"><img class="ldlogo"
+                    src="images/linkedin.png" alt="LinkedIn"></a>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
