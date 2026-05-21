@@ -3,6 +3,8 @@ let currentAdjList = {};
 
 let cy;
 
+// let num = document.getElementById('size').value == 'small' ? 6 : 10;
+
 function generateRandomGraph(nodeCount, edgeCount, graphType, cycleType) {
     let elements = [];
 
@@ -33,6 +35,7 @@ function generateRandomGraph(nodeCount, edgeCount, graphType, cycleType) {
 
             if (graphType === 'directed') {
 
+                // Force DAG direction
                 if (source > target) {
 
                     [source, target] = [target, source];
@@ -153,8 +156,8 @@ function generateAdjacencyList(graphType) {
 
             if (graphType === 'undirected') {
                 adj[v].push({
-                    node:u,
-                    weight:element.data.weight
+                    node: u,
+                    weight: element.data.weight
                 });
             }
         }
@@ -186,21 +189,26 @@ function renderAdjacencyList(graphType) {
 
 function resetVisualisation() {
 
+    // Reset queue
     document.querySelector('.Queue').innerHTML = '';
 
+    // Reset result
     document.querySelector('.resarr').innerHTML = '';
 
+    // Reset visited array
     for (let i = 0; i < 10; i++) {
 
         document.querySelector(`.vis${i}`).innerHTML = '0';
 
     }
 
+    // Reset node colors
     cy.nodes().style(
         'background-color',
         'lightskyblue'
     );
 
+    // Reset edge colors
     cy.edges().style({
         'line-color': '#ccc',
         'target-arrow-color': '#ccc'
@@ -239,18 +247,23 @@ async function bfs() {
 
         while (queue.length > 0) {
 
+            // SHOW CURRENT QUEUE
             renderQueue(queue);
 
             await sleep(getSpeed());
 
+            // FRONT ELEMENT
             let node = queue[0];
-            
+
+            // DEQUEUE ANIMATION
             await dequeueAnimation();
-            
+
+            // ACTUAL POP
             queue.shift();
 
             renderQueue(queue);
 
+            // PROCESS NODE
             cy.getElementById(node).style(
                 'background-color',
                 'orange'
@@ -267,6 +280,7 @@ async function bfs() {
                 'green'
             );
 
+            // ENQUEUE NEIGHBOURS
             for (let neighbourObj of currentAdjList[node]) {
 
                 let neighbour = neighbourObj.node;
@@ -286,10 +300,59 @@ async function bfs() {
                 }
             }
         }
+
+        // let queue = [];
+
+        // queue.push(source);
+
+        // visited[source] = true;
+
+        // document.querySelector(`.vis${source}`)
+        //     .innerHTML = '1';
+
+        // while (queue.length > 0) {
+
+        //     let node = queue.shift();
+
+        //     renderQueue(queue);
+
+        //     cy.getElementById(node).style(
+        //         'background-color',
+        //         'orange'
+        //     );
+
+        //     await sleep(getSpeed());
+
+        //     result.push(node);
+
+        //     renderResult(result);
+
+        //     cy.getElementById(node).style(
+        //         'background-color',
+        //         'green'
+        //     );
+
+        //     for (let neighbour of currentAdjList[node]) {
+
+        //         if (!visited[neighbour]) {
+
+        //             visited[neighbour] = true;
+
+        //             document.querySelector(`.vis${neighbour}`)
+        //                 .innerHTML = '1';
+
+        //             queue.push(neighbour);
+
+        //             renderQueue(queue);
+        //         }
+        //     }
+        // }
     }
 
+    // Start BFS from entered node
     await bfsTraversal(startNode);
 
+    // Traverse remaining components
     for (let node in currentAdjList) {
 
         if (!visited[node]) {
@@ -321,6 +384,18 @@ function sleep(ms) {
 }
 
 function renderQueue(queue) {
+    // let qdiv = document.querySelector('.Queue');
+
+    // qdiv.innerHTML = '';
+
+    // queue.forEach(element => {
+    //     let nodeDiv = document.createElement('div');
+    //     nodeDiv.classList.add('queueNode');
+
+    //     nodeDiv.innerHTML = element;
+
+    //     qdiv.appendChild(nodeDiv);
+    // });
 
     let qdiv = document.querySelector('.Queue');
 
@@ -364,6 +439,21 @@ async function dfs() {
         for (let neighbourObj of currentAdjList[node]) {
             let neighbour = neighbourObj.node;
             if (!visited[neighbour]) {
+                // let edge = cy.edges().filter(edge => {
+
+                //     let src = edge.data('source');
+                //     let tgt = edge.data('target');
+
+                //     return (
+                //         (src == node && tgt == neighbour) ||
+                //         (src == neighbour && tgt == node)
+                //     );
+                // });
+
+                // edge.style({
+                //     'line-color': 'orange',
+                //     'target-arrow-color': 'orange'
+                // });
 
                 await dfsTraversal(neighbour);
             }
@@ -483,12 +573,14 @@ async function dijkstras() {
 
         await sleep(getSpeed());
 
+        // TRAVERSE NEIGHBOURS
         for (let neighbourObj of currentAdjList[node]) {
 
             let neighbour = neighbourObj.node;
 
             let wt = neighbourObj.weight;
-            
+
+            // FIND EDGE
             let edge = cy.edges().filter(edge => {
 
                 let src = edge.data('source');
@@ -500,6 +592,7 @@ async function dijkstras() {
                 );
             });
 
+            // EDGE HIGHLIGHT
             edge.style({
                 'line-color': 'orange',
                 'target-arrow-color': 'orange'
@@ -507,6 +600,7 @@ async function dijkstras() {
 
             await sleep(300);
 
+            // RELAXATION
             if (dist[node] + wt < dist[neighbour]) {
 
                 dist[neighbour] =
@@ -524,17 +618,84 @@ async function dijkstras() {
                 await sleep(getSpeed());
             }
 
+            // RESET EDGE
             edge.style({
                 'line-color': '#ccc',
                 'target-arrow-color': '#ccc'
             });
         }
 
+        // FINALIZE NODE
         cy.getElementById(node).style(
             'background-color',
             'green'
         );
     }
+}
+
+async function topo_sort(){
+    resetVisualisation();
+
+    let n = Object.keys(currentAdjList).length;
+
+    let indegree = Array(n).fill(0);
+
+    let q=[];
+
+    let result=[];
+
+    for(let node in currentAdjList){
+        for(let it of currentAdjList[node]){
+            indegree[it.node]++;
+        }
+    }
+
+    renderDistanceArray(indegree);
+
+    for(let node in currentAdjList){
+        if(indegree[node]===0){
+            q.push(node);
+        }
+    }
+
+    renderQueue(q);
+
+    while(q.length>0){
+        let node=q.shift();
+
+        renderQueue(q);
+
+        cy.getElementById(node).style(
+            'background-color',
+            'orange'
+        );
+
+        result.push(node);
+
+        renderResult(result);
+
+        await sleep(getSpeed());
+
+        for(let it of currentAdjList[node]){
+            indegree[it.node]--;
+
+            renderDistanceArray(indegree);
+
+            if(indegree[it.node]===0){
+                q.push(it.node);
+                renderQueue(q);
+            }
+        }
+
+        cy.getElementById(node).style(
+            'background-color',
+            'green'
+        );
+
+        await sleep(getSpeed());
+    }
+
+    // renderQueue(q);
 }
 
 function renderResult(result) {
@@ -601,6 +762,10 @@ document.getElementById('visualiseBtn').addEventListener(
         else if (algorithm == 'dijkstras') {
             dijkstras();
         }
+
+        else if(algorithm=='topo'){
+            topo_sort();
+        }
     }
 );
 
@@ -616,7 +781,18 @@ document.getElementById('algorithms').addEventListener(
         if (algorithm === 'dfs') {
 
             queueSection.style.display = 'none';
+            let startNode = document.querySelector('input');
+            startNode.disabled=false;
+            startNode.style.cursor = 'default';
 
+            let dirundir = document.getElementById('dir_undir');
+            let cycacyc = document.getElementById('cycles');
+
+            dirundir.disabled=false;
+            cycacyc.disabled=false;
+
+            dirundir.style.cursor = 'default';
+            cycacyc.style.cursor = 'default';
         }
 
         else if (algorithm == 'dijkstras') {
@@ -624,17 +800,75 @@ document.getElementById('algorithms').addEventListener(
             queueName.innerHTML = 'Priority Queue';
             visName.innerHTML = 'Distance Array :-';
 
+            let startNode = document.querySelector('input');
+            startNode.disabled=false;
+
             let indexes = document.querySelectorAll('.ind');
             indexes.forEach(index => {
                 index.innerHTML = 'INF';
-            })
+            });
+            startNode.style.cursor = 'default';
+
+            let dirundir = document.getElementById('dir_undir');
+            let cycacyc = document.getElementById('cycles');
+
+            dirundir.disabled=false;
+            cycacyc.disabled=false;
+
+            dirundir.style.cursor = 'default';
+            cycacyc.style.cursor = 'default';
         }
+
+        else if (algorithm == 'topo') {
+            queueSection.style.display = 'flex';
+            let startNode = document.querySelector('input');
+            startNode.disabled=true;
+            visName.innerHTML = 'Indegree Array :-';
+            let indexes = document.querySelectorAll('.ind');
+            indexes.forEach(index => {
+                index.innerHTML = '0';
+            })
+            startNode.style.cursor = 'not-allowed';
+
+            let dirundir = document.getElementById('dir_undir');
+            dirundir.value = 'directed';
+
+            let cycacyc = document.getElementById('cycles');
+            cycacyc.value = 'acyclic';
+
+            renderGraph();
+            resetVisualisation();
+
+            dirundir.disabled=true;
+            cycacyc.disabled=true;
+
+            dirundir.style.cursor = 'not-allowed';
+            cycacyc.style.cursor = 'not-allowed';
+
+            queueName.innerHTML = 'Queue';
+        }
+
         else {
 
             queueSection.style.display = 'flex';
             queueName.innerHTML = 'Queue';
             visName.innerHTML = 'Visited Array :-';
+            let indexes = document.querySelectorAll('.ind');
+            indexes.forEach(index => {
+                index.innerHTML = '0';
+            });
+            let startNode = document.querySelector('input');
+            startNode.disabled=false;
+            startNode.style.cursor = 'default';
 
+            let dirundir = document.getElementById('dir_undir');
+            let cycacyc = document.getElementById('cycles');
+
+            dirundir.disabled=false;
+            cycacyc.disabled=false;
+
+            dirundir.style.cursor = 'default';
+            cycacyc.style.cursor = 'default';
         }
 
     }
