@@ -3,7 +3,7 @@ let currentAdjList = {};
 
 let cy;
 
-function generateRandomGraph(nodeCount, edgeCount, graphType, cycleType) {
+function generateRandomGraph(nodeCount, edgeCount, graphType, cycleType, forceConnected=false) {
     let elements = [];
 
     for (let i = 0; i < nodeCount; i++) {
@@ -15,6 +15,35 @@ function generateRandomGraph(nodeCount, edgeCount, graphType, cycleType) {
     }
 
     let edgeSet = new Set();
+
+    if (forceConnected) {
+
+        for (let i = 1; i < nodeCount; i++) {
+
+            let parent = Math.floor(Math.random() * i);
+
+            let source = parent;
+            let target = i;
+
+            let edgeKey =
+                source < target
+                    ? `${source}-${target}`
+                    : `${target}-${source}`;
+
+            edgeSet.add(edgeKey);
+
+            let weight = Math.floor(Math.random() * 9) + 1;
+
+            elements.push({
+                data: {
+                    id: `e${source}${target}`,
+                    source: `${source}`,
+                    target: `${target}`,
+                    weight: weight
+                }
+            });
+        }
+    }
 
     if (
         graphType === 'undirected' &&
@@ -82,7 +111,9 @@ function renderGraph() {
     let cycleType = document.getElementById('cycles').value;
     let num = document.getElementById('size').value == 'small' ? 6 : 10;
 
-    currentGraphElements = generateRandomGraph(num, num + 2, graphType, cycleType);
+    let forceConnected = document.getElementById('algorithms').value === 'prims';
+
+    currentGraphElements = generateRandomGraph(num, num + 2, graphType, cycleType, forceConnected);
 
     cy = cytoscape({
         container: document.getElementById('graph'),
@@ -623,6 +654,135 @@ function getSpeed() {
     return 200;
 }
 
+async function prims() {
+    resetVisualisation();
+
+    let n = Object.keys(currentAdjList).length;
+
+    let visited = Array(n).fill(false);
+
+    let pq = [];
+
+    let mstWeight = 0;
+
+    let result = [];
+
+    pq.push({
+        node: 0,
+        weight: 0,
+        parent: -1
+    });
+
+    renderPQueue(
+        pq.map(x => ({
+            node: x.node,
+            dist: x.weight
+
+        }))
+    );
+
+    while (pq.length > 0) {
+        pq.sort((a, b) => a.weight - b.weight);
+
+        renderPQueue(
+            pq.map(x => ({
+                node: x.node,
+                dist: x.weight
+            }))
+        );
+
+        await sleep(getSpeed());
+
+        let current = pq.shift();
+
+        let node = current.node;
+
+        let wt = current.weight;
+
+        let parent = current.parent;
+
+        renderPQueue(
+            pq.map(x => ({
+                node: x.node,
+                dist: x.weight
+            }))
+        );
+
+        if (visited[node]) continue;
+
+        visited[node] = true;
+
+        document.querySelector(`.vis${node}`)
+            .innerHTML = '1';
+
+        cy.getElementById(node).style(
+            'background-color',
+            'orange'
+        );
+
+        if (parent != -1) {
+            let edge = cy.edges().filter(edge => {
+
+                let src = edge.data('source');
+
+                let tgt = edge.data('target');
+
+                return (
+                    (src == parent && tgt == node) ||
+                    (src == node && tgt == parent)
+                );
+            });
+
+            edge.style({
+                'line-color': 'green',
+                'target-arrow-color': 'green',
+                'width': 5
+            });
+
+            mstWeight += wt;
+
+            result.push(`(${parent}-${node})`);
+
+            renderResult(result);
+        }
+
+        await sleep(getSpeed());
+
+        cy.getElementById(node).style(
+            'background-color',
+            'green'
+        );
+
+        for (let neighbourObj of currentAdjList[node]) {
+
+            let neighbour = neighbourObj.node;
+
+            let edgeWeight = neighbourObj.weight;
+
+            if (!visited[neighbour]) {
+
+                pq.push({
+                    node: neighbour,
+                    weight: edgeWeight,
+                    parent: node
+                });
+
+                renderPQueue(
+                    pq.map(x => ({
+                        node: x.node,
+                        dist: x.weight
+                    }))
+                );
+
+                await sleep(300);
+            }
+        }
+    }
+
+    document.querySelector('.resarr').innerHTML =
+        `${result.join(' ')} | MST Weight = ${mstWeight}`;
+}
+
 renderGraph();
 
 document.getElementById('newGraphBtn').addEventListener(
@@ -673,6 +833,10 @@ document.getElementById('visualiseBtn').addEventListener(
         else if(algorithm=='topo'){
             topo_sort();
         }
+
+        else if (algorithm == 'prims') {
+            prims();
+        }
     }
 );
 
@@ -690,7 +854,7 @@ document.getElementById('algorithms').addEventListener(
             queueSection.style.display = 'none';
             let startNode = document.querySelector('input');
             startNode.disabled=false;
-            startNode.style.cursor = 'default';
+            startNode.style.cursor = 'auto';
 
             let dirundir = document.getElementById('dir_undir');
             let cycacyc = document.getElementById('cycles');
@@ -698,8 +862,8 @@ document.getElementById('algorithms').addEventListener(
             dirundir.disabled=false;
             cycacyc.disabled=false;
 
-            dirundir.style.cursor = 'default';
-            cycacyc.style.cursor = 'default';
+            dirundir.style.cursor = 'auto';
+            cycacyc.style.cursor = 'auto';
         }
 
         else if (algorithm == 'dijkstras') {
@@ -755,6 +919,27 @@ document.getElementById('algorithms').addEventListener(
             queueName.innerHTML = 'Queue';
         }
 
+        else if (algorithm == 'prims') {
+            queueSection.style.display = 'flex';
+            queueName.innerHTML = 'Priority Queue';
+
+            let startNode = document.querySelector('input');
+            startNode.disabled = true;
+            startNode.style.cursor = 'not-allowed';
+            let dirundir = document.getElementById('dir_undir');
+            dirundir.value = 'undirected';
+
+            renderGraph();
+            resetVisualisation();
+
+            dirundir.disabled = true;
+
+            dirundir.style.cursor = 'not-allowed';
+
+            let visName = document.querySelector('.visname');
+            visName.innerHTML = 'Visited Array :-';
+        }
+
         else {
 
             queueSection.style.display = 'flex';
@@ -774,8 +959,8 @@ document.getElementById('algorithms').addEventListener(
             dirundir.disabled=false;
             cycacyc.disabled=false;
 
-            dirundir.style.cursor = 'default';
-            cycacyc.style.cursor = 'default';
+            dirundir.style.cursor = 'auto';
+            cycacyc.style.cursor = 'auto';
         }
 
     }
