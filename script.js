@@ -3,6 +3,43 @@ let currentAdjList = {};
 
 let cy;
 
+class DisjointSet {
+    constructor(n) {
+        this.parent = Array(n);
+        this.rank = Array(n).fill(0);
+
+        for (let i = 0; i < n; i++) {
+            this.parent[i] = i;
+        }
+    }
+
+    findParent(node) {
+        if (this.parent[node] === node) {
+            return node;
+        }
+
+        return this.parent[node] = this.findParent(this.parent[node]);
+    }
+
+    unionByRank(u, v) {
+        let ulp_u = this.findParent(u);
+        let ulp_v = this.findParent(v);
+
+        if (ulp_u === ulp_v) return;
+
+        if (this.rank[ulp_u] < this.rank[ulp_v]) {
+            this.parent[ulp_u] = ulp_v;
+        }
+        else if (this.rank[ulp_v] < this.rank[ulp_u]) {
+            this.parent[ulp_v] = ulp_u;
+        }
+        else {
+            this.parent[ulp_v] = ulp_u;
+            this.rank[ulp_u]++;
+        }
+    }
+}
+
 function generateRandomGraph(nodeCount, edgeCount, graphType, cycleType, forceConnected=false) {
     let elements = [];
 
@@ -783,6 +820,122 @@ async function prims() {
         `${result.join(' ')} | MST Weight = ${mstWeight}`;
 }
 
+async function kruskals() {
+    resetVisualisation();
+
+    let n = Object.keys(currentAdjList).length;
+
+    let ds = new DisjointSet(n);
+
+    let edges = [];
+
+    let mstWeight = 0;
+
+    let result = [];
+
+    currentGraphElements.forEach(element => {
+        if (element.data.source) {
+            edges.push({
+                source: Number(element.data.source),
+                target: Number(element.data.target),
+                weight: element.data.weight
+            });
+        }
+    });
+
+    edges.sort((a, b) => a.weight - b.weight);
+
+    renderPQueue(
+        edges.map(edge => ({
+            node: `${edge.source}-${edge.target}`,
+            dist: edge.weight
+        }))
+    );
+
+    for (let edgeObj of edges) {
+        let u = edgeObj.source;
+        let v = edgeObj.target;
+
+        let wt = edgeObj.weight;
+
+        renderPQueue(
+            edges.map(edge => ({
+                node: `${edge.source}-${edge.target}`,
+                dist: edge.weight
+            }))
+        );
+
+        await sleep(getSpeed());
+
+        let edge = cy.edges().filter(edge => {
+            let src = Number(edge.data('source'));
+
+            let tgt = Number(edge.data('target'));
+
+            return (
+                (src === u && tgt === v) ||
+                (src === v && tgt === u)
+            );
+        });
+
+        edge.style({
+            'line-color': 'orange',
+            'target-arrow-color': 'orange',
+            'width': 5
+        });
+
+        await sleep(getSpeed());
+
+        if (ds.findParent(u) !== ds.findParent(v)) {
+
+            ds.unionByRank(u, v);
+
+            mstWeight += wt;
+
+            result.push(`(${u}-${v}, ${wt})`);
+
+            renderResult(result);
+
+            edge.style({
+                'line-color': 'green',
+                'target-arrow-color': 'green',
+                'width': 5
+            });
+
+            cy.getElementById(String(u)).style(
+                'background-color',
+                'green'
+            );
+
+            cy.getElementById(String(v)).style(
+                'background-color',
+                'green'
+            );
+        }
+
+        else {
+
+            // CYCLE EDGE
+            edge.style({
+                'line-color': 'red',
+                'target-arrow-color': 'red',
+                'width': 5
+            });
+
+            await sleep(700);
+
+            edge.style({
+                'line-color': '#ccc',
+                'target-arrow-color': '#ccc',
+                'width': 3
+            });
+        }
+    }
+
+    document.querySelector('.resarr').innerHTML =
+        `${result.join(' ')} | MST Weight = ${mstWeight}`;
+}
+
 renderGraph();
 
 document.getElementById('newGraphBtn').addEventListener(
@@ -836,6 +989,10 @@ document.getElementById('visualiseBtn').addEventListener(
 
         else if (algorithm == 'prims') {
             prims();
+        }
+
+        else if (algorithm == 'kruskals') {
+            kruskals();
         }
     }
 );
@@ -938,6 +1095,41 @@ document.getElementById('algorithms').addEventListener(
 
             let visName = document.querySelector('.visname');
             visName.innerHTML = 'Visited Array :-';
+        }
+
+        else if (algorithm == 'kruskals') {
+
+            queueSection.style.display = 'flex';
+
+            queueName.innerHTML = 'Sorted Edges';
+
+            let startNode = document.querySelector('input');
+
+            startNode.disabled = true;
+
+            startNode.style.cursor = 'not-allowed';
+
+            let dirundir = document.getElementById('dir_undir');
+
+            dirundir.value = 'undirected';
+
+            renderGraph();
+
+            resetVisualisation();
+
+            dirundir.disabled = true;
+
+            dirundir.style.cursor = 'not-allowed';
+
+            let visName = document.querySelector('.visname');
+
+            visName.innerHTML = 'DSU / MST :-';
+
+            let indexes = document.querySelectorAll('.ind');
+
+            indexes.forEach(index => {
+                index.innerHTML = '-';
+            });
         }
 
         else {
