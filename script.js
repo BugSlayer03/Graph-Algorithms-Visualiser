@@ -553,14 +553,12 @@ async function dijkstras() {
 
         await sleep(getSpeed());
 
-        // TRAVERSE NEIGHBOURS
         for (let neighbourObj of currentAdjList[node]) {
 
             let neighbour = neighbourObj.node;
 
             let wt = neighbourObj.weight;
 
-            // FIND EDGE
             let edge = cy.edges().filter(edge => {
 
                 let src = edge.data('source');
@@ -915,7 +913,6 @@ async function kruskals() {
 
         else {
 
-            // CYCLE EDGE
             edge.style({
                 'line-color': 'red',
                 'target-arrow-color': 'red',
