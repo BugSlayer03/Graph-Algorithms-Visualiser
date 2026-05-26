@@ -280,10 +280,7 @@ async function bfs() {
 
     let startNode = Number(document.querySelector('input').value);
 
-    if (
-        isNaN(startNode) ||
-        !(startNode in currentAdjList)
-    ) {
+    if (!(startNode in currentAdjList) || startNode == "") {
         alert('Enter valid start node');
         return;
     }
@@ -412,6 +409,11 @@ async function dfs() {
     resetVisualisation();
 
     let startNode = Number(document.querySelector('input').value);
+
+    if (!(startNode in currentAdjList) || startNode == "") {
+        alert('Enter valid start node');
+        return;
+    }
 
     let visited = {};
 
@@ -1013,6 +1015,9 @@ document.getElementById('algorithms').addEventListener(
             let dirundir = document.getElementById('dir_undir');
             let cycacyc = document.getElementById('cycles');
 
+            renderGraph();
+            resetVisualisation();
+
             dirundir.disabled=false;
             cycacyc.disabled=false;
 
@@ -1036,6 +1041,9 @@ document.getElementById('algorithms').addEventListener(
 
             let dirundir = document.getElementById('dir_undir');
             let cycacyc = document.getElementById('cycles');
+
+            renderGraph();
+            resetVisualisation();
 
             dirundir.disabled=false;
             cycacyc.disabled=false;
@@ -1140,10 +1148,13 @@ document.getElementById('algorithms').addEventListener(
             });
             let startNode = document.querySelector('input');
             startNode.disabled=false;
-            startNode.style.cursor = 'default';
+            startNode.style.cursor = 'auto';
 
             let dirundir = document.getElementById('dir_undir');
             let cycacyc = document.getElementById('cycles');
+
+            renderGraph();
+            resetVisualisation();
 
             dirundir.disabled=false;
             cycacyc.disabled=false;
